@@ -8,8 +8,8 @@ jobs:
           - uses: actions/checkout@v2
           - name: Checkout submodules
             run : git submodule update --init --recursive
-          - name: Run unit test
-            run: ./unit-test.sh
+          # - name: Run unit test
+          #   run: ./unit-test.sh
     full-test:
         container: cuaesd/aesd-autotest:assignment2
         runs-on: self-hosted
@@ -17,5 +17,5 @@ jobs:
           - uses: actions/checkout@v2
           - name: Checkout submodules
             run : git submodule update --init --recursive
-          - name: Run full test
-            run: ./full-test.sh
+          # - name: Run full test
+          #   run: ./full-test.sh
