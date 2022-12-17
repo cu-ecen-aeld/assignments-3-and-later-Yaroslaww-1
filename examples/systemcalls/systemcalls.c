@@ -16,8 +16,10 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-
-    return true;
+    const int callResult = system(cmd);
+    if (cmd == NULL) return callResult != 0;
+    if (WIFEXITED(callResult) && !WEXITSTATUS(callResult)) return true;
+    return false;
 }
 
 /**
@@ -61,7 +63,8 @@ bool do_exec(int count, ...)
 
     va_end(args);
 
-    return true;
+    if (waitpid(pid, &status, 0) == -1) return false;
+	  return WIFEXITED(status) && (WEXITSTATUS(status) == EXIT_SUCCESS);
 }
 
 /**
@@ -82,7 +85,6 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
 
 
 /*
@@ -93,7 +95,19 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *
 */
 
-    va_end(args);
+    const pid_t forkedPid = fork();
+    int status;
+    const int fd = open(outputfile, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+    if (fd < 0) return false;
 
-    return true;
+    if (forkedPid == -1) return false;
+    if (forkedPid == 0) {
+      if (dup2(fd, 1) < 0) return false;
+      close(fd);
+      execv(command[0], command);
+      exit(127);
+    }
+
+    if (waitpid(forkedPid, &status, 0) == -1) return false;
+    return WIFEXITED(status) && (WEXITSTATUS(status) == EXIT_SUCCESS);
 }
